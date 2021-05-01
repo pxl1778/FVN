@@ -20,6 +20,10 @@ public class DialogueManager : MonoBehaviour
     [SerializeField]
     protected Image FadeImage;
     [SerializeField]
+    protected AudioSource MusicTrack;
+    [SerializeField]
+    protected AudioSource SoundEffect;
+    [SerializeField]
     protected float textSpeed = 0.025f;
 
     protected int currentLine;
@@ -29,15 +33,21 @@ public class DialogueManager : MonoBehaviour
     private bool moveOn = false;
     private Vector3 originalBoxPosition;
     private List<DialogueLine> lines;
+    private Sequence tweenSequence;
 
     const string DIALOGUE = "Dialogue";
     const string CHARACTER = "Character";
     const string FADE_IN_LIST = "Fade In (List Characters)";
     const string FADE_OUT_LIST = "Fade Out (List Characters)";
     const string BACKGROUND = "Background";
+    const string MUSIC = "Music";
+    const string SOUND = "Sound";
     const string EXCLAIM_TEXT_BOX = "Exclaim Text Box";
     const string SCREEN_FADE_IN = "Screen Fade In";
     const string SCREEN_FADE_OUT = "Screen Fade Out";
+    const string SPECIAL_ACTIONS = "Special Actions";
+
+    const string NORMAL_TEXTBOX_NAME = "Background";
 
     // Start is called before the first frame update
     void Start()
@@ -77,14 +87,17 @@ public class DialogueManager : MonoBehaviour
             {
                 string[] fields = parser.ReadFields();
                 DialogueLine line = new DialogueLine();
-                line.Text = fields[fieldsDictionary[DIALOGUE]];
-                line.Character = fields[fieldsDictionary[CHARACTER]];
-                line.FadeInList = fields[fieldsDictionary[FADE_IN_LIST]].Split(',');
-                line.FadeOutList = fields[fieldsDictionary[FADE_OUT_LIST]].Split(',');
-                line.Background = fields[fieldsDictionary[BACKGROUND]];
-                line.ExclaimTextBox = bool.Parse(fields[fieldsDictionary[EXCLAIM_TEXT_BOX]]);
-                line.ScreenFadeIn = bool.Parse(fields[fieldsDictionary[SCREEN_FADE_IN]]);
-                line.ScreenFadeOut = bool.Parse(fields[fieldsDictionary[SCREEN_FADE_OUT]]);
+                line.Text = fieldsDictionary.ContainsKey(DIALOGUE) ? fields[fieldsDictionary[DIALOGUE]] : "";
+                line.Character = fieldsDictionary.ContainsKey(CHARACTER) ? fields[fieldsDictionary[CHARACTER]] : "";
+                line.FadeInList = fieldsDictionary.ContainsKey(FADE_IN_LIST) ? fields[fieldsDictionary[FADE_IN_LIST]].Split(',') : null;
+                line.FadeOutList = fieldsDictionary.ContainsKey(FADE_OUT_LIST) ? fields[fieldsDictionary[FADE_OUT_LIST]].Split(',') : null;
+                line.Background = fieldsDictionary.ContainsKey(BACKGROUND) ? fields[fieldsDictionary[BACKGROUND]] : "";
+                line.Music = fieldsDictionary.ContainsKey(MUSIC) ? fields[fieldsDictionary[MUSIC]] : "";
+                line.Sound = fieldsDictionary.ContainsKey(SOUND) ? fields[fieldsDictionary[SOUND]] : "";
+                line.ExclaimTextBox = fieldsDictionary.ContainsKey(EXCLAIM_TEXT_BOX) ? bool.Parse(fields[fieldsDictionary[EXCLAIM_TEXT_BOX]]) : false;
+                line.ScreenFadeIn = fieldsDictionary.ContainsKey(SCREEN_FADE_IN) ? bool.Parse(fields[fieldsDictionary[SCREEN_FADE_IN]]) : false;
+                line.ScreenFadeOut = fieldsDictionary.ContainsKey(SCREEN_FADE_OUT) ? bool.Parse(fields[fieldsDictionary[SCREEN_FADE_OUT]]) : false;
+                line.SpecialActions = fieldsDictionary.ContainsKey(SPECIAL_ACTIONS) ? fields[fieldsDictionary[SPECIAL_ACTIONS]].Split(';') : null;
                 lines.Add(line);
             }
         }
@@ -109,17 +122,81 @@ public class DialogueManager : MonoBehaviour
         }
     }
 
+    void ContinueDialogue()
+    {
+        tweenSequence.Kill(true);
+        tweenSequence = DOTween.Sequence();
+        if (lines[currentLine].ScreenFadeOut)
+        {
+            tweenSequence.Append(FadeOut());
+        }
+        currentLine++;
+        DialogueLine current = lines[currentLine];
+        if (current.ScreenFadeIn)
+        {
+            tweenSequence.Append(FadeIn());
+        }
+        if(current.FadeOutList != null && current.FadeOutList.Length > 0)
+        {
+            foreach(string character in current.FadeOutList)
+            {
+                Debug.Log("Fade Out: " + character);
+                //find character image and start fade out tween
+            }
+        }
+        if (current.Background != "")
+        {
+            //change backgroundimage image
+            //new image on top, .DOFade image on top
+        }
+        if (current.Music != "")
+        {
+            //music
+            Tween musicTween = Box.DOFade(Box.color.a, 0.1f);
+            musicTween.onComplete = () => { Debug.Log("ChangeMusic");/*Change music*/ };
+            tweenSequence.Append(musicTween);
+        }
+        Image i = Box.GetComponent<Image>();
+        Tween t = Box.DOFade(Box.color.a, 0.1f);
+        t.onComplete = () => {
+            if (current.Sound != "")
+            {
+                Debug.Log("ChangeSound");/*Change music*/
+            }
+            if (current.ExclaimTextBox == (Box.GetComponent<Image>().sprite.name == NORMAL_TEXTBOX_NAME))
+            {
+                Debug.Log("ChangeTextBox");
+            }
+        };
+        tweenSequence.Append(t);
+        if (current.FadeInList != null && current.FadeInList.Length > 0)
+        {
+            foreach (string character in current.FadeInList)
+            {
+                //find character image and start fade out tween
+                Debug.Log("Fade In: " + character);
+            }
+        }
+        Tween nameTween = Box.DOFade(Box.color.a, 0.1f);
+        nameTween.onComplete = () => {
+            Debug.Log("Change Nameplate");
+            currentCharacter = 0;
+            timer = 0;
+            active = true;
+        };
+        active = false;
+        tweenSequence.Append(nameTween);
+        BoxText.text = "";
+    }
+
     void HandleInput()
     {
         if (moveOn)
         {
-            currentLine++;
-            if(currentLine < lines.Count)
+            if(currentLine + 1 < lines.Count)
             {
                 //Next line
-                currentCharacter = 0;
-                BoxText.text = "";
-                timer = 0;
+                ContinueDialogue();
             }
             else
             {
