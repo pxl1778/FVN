@@ -1,3 +1,4 @@
 Dialogue,Character,Fade In (List Characters),Fade Out (List Characters),Background,Exclaim Text Box,Screen Fade In,Screen Fade Out
 first dialogue,Character 1,"1 Happy,2 Sad",,Background 1,FALSE,FALSE,FALSE
-second dialogue,Character 1,2 Happy,1 Happy,,FALSE,FALSE,FALSE
+second dialogue is a bit longer so that I can see how a longer sentence would fit into the box.,Character 2 Character,2 Happy,1 Happy,,FALSE,FALSE,FALSE
+third dialogue,Character 1,"1 Happy,2 Sad",,Background 1,FALSE,FALSE,FALSE

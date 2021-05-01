@@ -11,14 +11,16 @@ public class DialogueManager : MonoBehaviour
 {
     [SerializeField]
     private string DialogueFileName;
-    //[SerializeField]
-    //private TextAsset CSVFile;
     [SerializeField]
     protected Text BoxText;
+    [SerializeField]
+    protected Text NameText;
     [SerializeField]
     protected Image Box;
     [SerializeField]
     protected Image FadeImage;
+    [SerializeField]
+    protected Image NamePlate;
     [SerializeField]
     protected AudioSource MusicTrack;
     [SerializeField]
@@ -26,7 +28,7 @@ public class DialogueManager : MonoBehaviour
     [SerializeField]
     protected float textSpeed = 0.025f;
 
-    protected int currentLine;
+    protected int currentLine = -1;
     protected int currentCharacter;
     private float timer = 0;
     private bool active = false;
@@ -48,6 +50,7 @@ public class DialogueManager : MonoBehaviour
     const string SPECIAL_ACTIONS = "Special Actions";
 
     const string NORMAL_TEXTBOX_NAME = "Background";
+    const string EXCLAIM_TEXTBOX_NAME = "Background";
 
     // Start is called before the first frame update
     void Start()
@@ -55,7 +58,7 @@ public class DialogueManager : MonoBehaviour
         FadeImage.color = new Color(0, 0, 0, 1);
         FadeIn().onComplete = () =>
             {
-                FadeBoxIn().onComplete = () => { active = true; };
+                FadeBoxIn().onComplete = () => { ContinueDialogue(); };
             };
         LoadDialogue();
         originalBoxPosition = Box.rectTransform.anchoredPosition;
@@ -124,9 +127,9 @@ public class DialogueManager : MonoBehaviour
 
     void ContinueDialogue()
     {
-        tweenSequence.Kill(true);
+        if(tweenSequence != null) { tweenSequence.Kill(true); }
         tweenSequence = DOTween.Sequence();
-        if (lines[currentLine].ScreenFadeOut)
+        if (currentLine >= 0 && lines[currentLine].ScreenFadeOut)
         {
             tweenSequence.Append(FadeOut());
         }
@@ -153,7 +156,7 @@ public class DialogueManager : MonoBehaviour
         {
             //music
             Tween musicTween = Box.DOFade(Box.color.a, 0.1f);
-            musicTween.onComplete = () => { Debug.Log("ChangeMusic");/*Change music*/ };
+            musicTween.onComplete = () => { Debug.Log("ChangeMusic: " + current.Music); };
             tweenSequence.Append(musicTween);
         }
         Image i = Box.GetComponent<Image>();
@@ -161,11 +164,18 @@ public class DialogueManager : MonoBehaviour
         t.onComplete = () => {
             if (current.Sound != "")
             {
-                Debug.Log("ChangeSound");/*Change music*/
+                Debug.Log("ChangeSound: " + current.Sound);
             }
             if (current.ExclaimTextBox == (Box.GetComponent<Image>().sprite.name == NORMAL_TEXTBOX_NAME))
             {
-                Debug.Log("ChangeTextBox");
+                if (current.ExclaimTextBox)
+                {
+                    Debug.Log("ExclaimTextBox");
+                }
+                else
+                {
+                    Debug.Log("NormalTextBox");
+                }
             }
         };
         tweenSequence.Append(t);
@@ -179,10 +189,65 @@ public class DialogueManager : MonoBehaviour
         }
         Tween nameTween = Box.DOFade(Box.color.a, 0.1f);
         nameTween.onComplete = () => {
-            Debug.Log("Change Nameplate");
-            currentCharacter = 0;
-            timer = 0;
-            active = true;
+            Tween plateTween = null;
+            if(NameText.text != current.Character && current.Character != ""){
+                if(NameText.text == ""){
+                    //character from narrator, tween up from behind
+                    plateTween = NamePlate.rectTransform.DOAnchorPosY(0, 0.3f, true);
+                    plateTween.onComplete = () =>
+                    {
+                        currentCharacter = 0;
+                        timer = 0;
+                        active = true;
+                    };
+                    NameText.text = current.Character;
+                    Canvas.ForceUpdateCanvases();
+                    LayoutRebuilder.ForceRebuildLayoutImmediate(NamePlate.rectTransform);
+                    Color plateColor;
+                    ColorUtility.TryParseHtmlString(CharacterData.CharacterPlateColor(current.Character), out plateColor);
+                    NamePlate.GetComponent<Image>().color = plateColor;
+                }
+                else{
+                    //new character speaking, tween across and lift new plate up
+                    NamePlate.rectTransform.DOAnchorPosX(100, 0.2f, true);
+                    NameText.DOFade(0, 0.2f);
+                    NamePlate.DOFade(0, 0.2f).OnComplete(() => {
+                        NamePlate.rectTransform.anchoredPosition = new Vector2(0, -NamePlate.rectTransform.sizeDelta.y);
+                        NamePlate.DOFade(1, 0.01f);
+                        NameText.DOFade(1, 0.01f);
+                        plateTween = NamePlate.rectTransform.DOAnchorPosY(0, 0.3f);
+                        plateTween.onComplete = () =>
+                        {
+                            currentCharacter = 0;
+                            timer = 0;
+                            active = true;
+                        };
+                        NameText.text = current.Character;
+                        Canvas.ForceUpdateCanvases();
+                        LayoutRebuilder.ForceRebuildLayoutImmediate(NamePlate.rectTransform);
+                        Color plateColor;
+                        ColorUtility.TryParseHtmlString(CharacterData.CharacterPlateColor(current.Character), out plateColor);
+                        NamePlate.GetComponent<Image>().color = plateColor;
+                    });
+                }
+            }
+            else if(current.Character == ""){
+                //narrator, move nameplate underneath text box
+                plateTween = NamePlate.rectTransform.DOAnchorPosY(-NamePlate.rectTransform.sizeDelta.y, 0.3f, true);
+                plateTween.onComplete = () =>
+                {
+                    currentCharacter = 0;
+                    timer = 0;
+                    active = true;
+                };
+            }
+            else
+            {
+                currentCharacter = 0;
+                timer = 0;
+                active = true;
+            }
+            Canvas.ForceUpdateCanvases();
         };
         active = false;
         tweenSequence.Append(nameTween);
