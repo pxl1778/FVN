@@ -1,4 +1,18 @@
-Dialogue,Character,Fade In (List Characters),Fade Out (List Characters),Background,Exclaim Text Box,Screen Fade In,Screen Fade Out
-first dialogue,Character 1,"1 Happy,2 Sad",,Background 1,FALSE,FALSE,FALSE
-second dialogue is a bit longer so that I can see how a longer sentence would fit into the box.,Character 2 Character,2 Happy,1 Happy,,FALSE,FALSE,FALSE
-third dialogue,Character 1,"1 Happy,2 Sad",,Background 1,FALSE,FALSE,FALSE
+Dialogue,Character,Fade In (List Characters),Fade Out (List Characters),Background,Music,Sound,Exclaim Text Box,Screen Fade In,Screen Fade Out,Special Actions
+"Welp, looks like it's time to get up. I can smell something good downstairs...",,,,Bedroom,,,FALSE,FALSE,FALSE,
+*Knock Knock*,,,,,,Knock,FALSE,FALSE,FALSE,
+Just a bit more sleep...,,,,,,,FALSE,FALSE,TRUE,
+*KNOCK KNOCK*,,,,,,Knock,TRUE,FALSE,FALSE,
+"The door's open, yah know!",Player,,,,,,FALSE,TRUE,FALSE,
+Mornin' buddy!,LI,LI_Idle 3,,,,,FALSE,FALSE,FALSE,
+Can't you bring the food up here instead of banging on my door?,Player,LI_Frown,,,,,FALSE,FALSE,FALSE,
+No can do! The food is already sitting on the kitchen table ready for you to arrive!,LI,LI_Idle,,,,,FALSE,FALSE,FALSE,
+Come down quickly before it gets coooold!,LI,,LI_Idle,,,,FALSE,FALSE,FALSE,
+Breakfast does sound pretty great right now.,,,,,,,FALSE,FALSE,FALSE,
+"The kitchen ain't bad. Got your microwave, oven, stovetop, kitchen table, drawers and cupboards filled with utensils and equipment.",,LI_Idle 3,,Kitchen,,,FALSE,FALSE,FALSE,
+We could cook whatever we wanted.,,,,,,,FALSE,FALSE,FALSE,
+I made some cheesy omelettes with pieces of pepperoni in them.,LI,,,,,,FALSE,FALSE,FALSE,
+"Dang, these snow leopards really knows how to cook!",,"Character2_Frown 2,Character3_Idle 4",,,,,FALSE,FALSE,FALSE,
+"Wait, there are 3 of you now?",Player,,,,,,FALSE,FALSE,FALSE,
+Don't worry about it.,Character 2,,,,,,FALSE,FALSE,FALSE,
+Cloning is easy!,Character 3,,,,,,FALSE,FALSE,FALSE,

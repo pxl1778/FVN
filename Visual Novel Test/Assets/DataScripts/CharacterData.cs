@@ -5,16 +5,20 @@ using UnityEngine;
 public static class CharacterData
 {
     public enum Character{
-        CHARACTER1,
+        PLAYER,
+        LI,
         CHARACTER2,
         CHARACTER3,
         NPC
     }
 
     public static Character getCharacter(string characterName){
-        switch(characterName){
-            case "Character 1":
-                return Character.CHARACTER1;
+        switch(characterName)
+        {
+            case "Player":
+                return Character.PLAYER;
+            case "LI":
+                return Character.LI;
             case "Character 2":
                 return Character.CHARACTER2;
             case "Character 3":
@@ -28,8 +32,11 @@ public static class CharacterData
     }
 
     public static string CharacterPlateColor(string characterName){
-        switch(getCharacter(characterName)){
-            case Character.CHARACTER1:
+        switch(getCharacter(characterName))
+        {
+            case Character.PLAYER:
+                return "#ffff00";
+            case Character.LI:
                 return "#ff0000";
             case Character.CHARACTER2:
                 return "#00ff00";

@@ -1,16 +1,27 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using Microsoft.VisualBasic.FileIO;
 using System.Globalization;
 using DG.Tweening;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 
 public class DialogueManager : MonoBehaviour
 {
     [SerializeField]
     private string DialogueFileName;
+    [SerializeField]
+    protected GameObject BackgroundsParent;
+    [SerializeField]
+    protected GameObject SpritesParent;
+    [SerializeField]
+    protected GameObject BackgroundPrefab;
+    [SerializeField]
+    protected GameObject SpritesPrefab;
     [SerializeField]
     protected Text BoxText;
     [SerializeField]
@@ -36,6 +47,11 @@ public class DialogueManager : MonoBehaviour
     private Vector3 originalBoxPosition;
     private List<DialogueLine> lines;
     private Sequence tweenSequence;
+    private Image currentBackground;
+    private Dictionary<string, Sprite> spriteDictionary = new Dictionary<string, Sprite>();
+    private Dictionary<string, Sprite> backgroundDictionary = new Dictionary<string, Sprite>();
+    private int dataLoaded = 0;
+    private Dictionary<string, Image> characterDictionary = new Dictionary<string, Image>();
 
     const string DIALOGUE = "Dialogue";
     const string CHARACTER = "Character";
@@ -55,13 +71,7 @@ public class DialogueManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        FadeImage.color = new Color(0, 0, 0, 1);
-        FadeIn().onComplete = () =>
-            {
-                FadeBoxIn().onComplete = () => { ContinueDialogue(); };
-            };
         LoadDialogue();
-        originalBoxPosition = Box.rectTransform.anchoredPosition;
     }
 
     // Update is called once per frame
@@ -92,9 +102,15 @@ public class DialogueManager : MonoBehaviour
                 DialogueLine line = new DialogueLine();
                 line.Text = fieldsDictionary.ContainsKey(DIALOGUE) ? fields[fieldsDictionary[DIALOGUE]] : "";
                 line.Character = fieldsDictionary.ContainsKey(CHARACTER) ? fields[fieldsDictionary[CHARACTER]] : "";
-                line.FadeInList = fieldsDictionary.ContainsKey(FADE_IN_LIST) ? fields[fieldsDictionary[FADE_IN_LIST]].Split(',') : null;
-                line.FadeOutList = fieldsDictionary.ContainsKey(FADE_OUT_LIST) ? fields[fieldsDictionary[FADE_OUT_LIST]].Split(',') : null;
+                line.FadeInList = fieldsDictionary.ContainsKey(FADE_IN_LIST) && fields[fieldsDictionary[FADE_IN_LIST]] != "" ? fields[fieldsDictionary[FADE_IN_LIST]].Split(',') : null;
+                if(line.FadeInList != null)
+                {
+                    List<string> sList = line.FadeInList.ToList();
+                    line.FadeInList.ToList().ForEach(s => {
+                        spriteDictionary[s.Split(' ')[0]] = null; }); }
+                line.FadeOutList = fieldsDictionary.ContainsKey(FADE_OUT_LIST) && fields[fieldsDictionary[FADE_OUT_LIST]] != "" ? fields[fieldsDictionary[FADE_OUT_LIST]].Split(',') : null;
                 line.Background = fieldsDictionary.ContainsKey(BACKGROUND) ? fields[fieldsDictionary[BACKGROUND]] : "";
+                if(line.Background != "") { backgroundDictionary[line.Background] = null; }
                 line.Music = fieldsDictionary.ContainsKey(MUSIC) ? fields[fieldsDictionary[MUSIC]] : "";
                 line.Sound = fieldsDictionary.ContainsKey(SOUND) ? fields[fieldsDictionary[SOUND]] : "";
                 line.ExclaimTextBox = fieldsDictionary.ContainsKey(EXCLAIM_TEXT_BOX) ? bool.Parse(fields[fieldsDictionary[EXCLAIM_TEXT_BOX]]) : false;
@@ -103,6 +119,82 @@ public class DialogueManager : MonoBehaviour
                 line.SpecialActions = fieldsDictionary.ContainsKey(SPECIAL_ACTIONS) ? fields[fieldsDictionary[SPECIAL_ACTIONS]].Split(';') : null;
                 lines.Add(line);
             }
+        }
+        LoadBackgrounds();
+        LoadSprites();
+    }
+
+    void LoadBackgrounds()
+    {
+        foreach(string s in backgroundDictionary.Keys)
+        {
+            AsyncOperationHandle<Sprite[]> spriteHandle = Addressables.LoadAssetAsync<Sprite[]>("Assets/Art/Backgrounds/" + s + ".png");
+            spriteHandle.Completed += BackgroundsLoaded;
+        }
+    }
+    void LoadSprites()
+    {
+        foreach (string s in spriteDictionary.Keys)
+        {
+            string characterName = s.Split('_')[0];
+            AsyncOperationHandle<Sprite[]> spriteHandle = Addressables.LoadAssetAsync<Sprite[]>("Assets/Art/Sprites/" + characterName + "/" + s + ".png");
+            spriteHandle.Completed += SpritesLoaded;
+        }
+    }
+
+    void SpritesLoaded(AsyncOperationHandle<Sprite[]> handleToCheck)
+    {
+        if (handleToCheck.Status == AsyncOperationStatus.Succeeded)
+        {
+            Sprite[] spriteArray = handleToCheck.Result;
+            if (!spriteDictionary.ContainsKey(spriteArray[0].name))
+            {
+                Debug.LogWarning("Sprite name not consistent: " + spriteArray[0].name);
+            }
+            spriteDictionary[spriteArray[0].name] = spriteArray[0];
+            dataLoaded++;
+        }
+        else
+        {
+            Debug.LogWarning("Issue with Loading Sprites: " + handleToCheck.Status);
+        }
+        CheckDoneLoading();
+    }
+
+    void BackgroundsLoaded(AsyncOperationHandle<Sprite[]> handleToCheck)
+    {
+        if (handleToCheck.Status == AsyncOperationStatus.Succeeded)
+        {
+            Sprite[] spriteArray = handleToCheck.Result;
+            if (!backgroundDictionary.ContainsKey(spriteArray[0].name))
+            {
+                Debug.LogWarning("Background name not consistent: " + spriteArray[0].name);
+            }
+            backgroundDictionary[spriteArray[0].name] = spriteArray[0];
+            dataLoaded++;
+        }
+        else
+        {
+            Debug.LogWarning("Issue with Loading Backgrounds: " + handleToCheck.Status);
+        }
+        CheckDoneLoading();
+    }
+
+    void CheckDoneLoading()
+    {
+        if(dataLoaded == backgroundDictionary.Keys.Count + spriteDictionary.Keys.Count)
+        {
+            if (lines[0].Background != "")
+            {
+                currentBackground = GameObject.Instantiate(BackgroundPrefab, BackgroundsParent.transform).GetComponent<Image>();
+                currentBackground.sprite = backgroundDictionary[lines[0].Background];
+            }
+            FadeImage.color = new Color(0, 0, 0, 1);
+            FadeIn().onComplete = () =>
+            {
+                FadeBoxIn().onComplete = () => { ContinueDialogue(); };
+            };
+            originalBoxPosition = Box.rectTransform.anchoredPosition;
         }
     }
 
@@ -143,14 +235,33 @@ public class DialogueManager : MonoBehaviour
         {
             foreach(string character in current.FadeOutList)
             {
-                Debug.Log("Fade Out: " + character);
+                string characterName = character.Split('_')[0];
+                if (characterDictionary.ContainsKey(characterName))
+                {
+                    tweenSequence.Join(characterDictionary[characterName].DOFade(0.0f, 1.0f).OnComplete(() => {
+                        GameObject.Destroy(characterDictionary[characterName].gameObject);
+                        characterDictionary.Remove(characterName);
+                    }));
+                }
+                else
+                {
+                    Debug.LogWarning("Character Name not found in Fade Out List on line " + currentLine + 2);
+                }
                 //find character image and start fade out tween
             }
         }
-        if (current.Background != "")
+        if (current.Background != "" && currentLine != 0)
         {
             //change backgroundimage image
             //new image on top, .DOFade image on top
+            Image prevBackground = currentBackground;
+            currentBackground = GameObject.Instantiate(BackgroundPrefab, BackgroundsParent.transform).GetComponent<Image>();
+            currentBackground.sprite = backgroundDictionary[current.Background];
+            currentBackground.color = new Color(1.0f, 1.0f, 1.0f, 0.0f);
+            currentBackground.DOFade(1, 2.0f).OnComplete(() =>
+            {
+                GameObject.Destroy(prevBackground.gameObject);
+            });
         }
         if (current.Music != "")
         {
@@ -184,7 +295,25 @@ public class DialogueManager : MonoBehaviour
             foreach (string character in current.FadeInList)
             {
                 //find character image and start fade out tween
-                Debug.Log("Fade In: " + character);
+                string[] characterArray = character.Split(' ');
+                Image currentCharacter;
+                string characterName = characterArray[0].Split('_')[0];
+                if (characterDictionary.ContainsKey(characterName)){
+                    currentCharacter = characterDictionary[characterName];
+                    tweenSequence.Join(Box.DOFade(Box.color.a, 0.5f).OnComplete(() => { currentCharacter.sprite = spriteDictionary[characterArray[0]]; }));                    
+                }
+                else
+                {
+                    currentCharacter = GameObject.Instantiate(SpritesPrefab, SpritesParent.transform).GetComponent<Image>();
+                    currentCharacter.color = new Color(1.0f, 1.0f, 1.0f, 0.0f);
+                    if (characterArray.Length > 1)
+                    {
+                        currentCharacter.rectTransform.anchoredPosition = new Vector2((int.Parse(characterArray[1]) * 500) - 1500, 0);
+                    }
+                    characterDictionary[characterName] = currentCharacter;
+                    tweenSequence.Join(currentCharacter.DOFade(1.0f, 1.0f));
+                    currentCharacter.sprite = spriteDictionary[characterArray[0]];
+                }
             }
         }
         Tween nameTween = Box.DOFade(Box.color.a, 0.1f);
@@ -239,6 +368,7 @@ public class DialogueManager : MonoBehaviour
                     currentCharacter = 0;
                     timer = 0;
                     active = true;
+                    NameText.text = "";
                 };
             }
             else
@@ -262,6 +392,7 @@ public class DialogueManager : MonoBehaviour
             {
                 //Next line
                 ContinueDialogue();
+                moveOn = false;
             }
             else
             {
