@@ -45,7 +45,14 @@ public class TitleMenu : MonoBehaviour
     {
         GameManager.instance.EventManager.TransitionLinesMidMovement.RemoveListener(ShowMainMenu);
         TitleObject.SetActive(false);
+        SelectSceneObject.SetActive(false);
         MainObject.SetActive(true);
         TransitionObject.EndTransition();
+    }
+
+    public void ShowSceneSelection()
+    {
+        MainObject.SetActive(false);
+        SelectSceneObject.SetActive(true);
     }
 }

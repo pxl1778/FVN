@@ -28,8 +28,8 @@ public class TransitionLines : MonoBehaviour
         foreach(Image panel in panels)
         {
             count++;
-            panel.rectTransform.localPosition = new Vector3(panel.rectTransform.localPosition.x, -2000.0f, panel.rectTransform.localPosition.z);
-            Tween t = DOTween.To(() => panel.rectTransform.localPosition, y => panel.rectTransform.localPosition = y, new Vector3(panel.rectTransform.localPosition.x, 0.0f, panel.rectTransform.localPosition.z), 0.5f).SetDelay(Random.Range(0.0f, 0.5f));
+            panel.rectTransform.localPosition = new Vector3(panel.rectTransform.localPosition.x - 300.0f, -2300.0f, panel.rectTransform.localPosition.z);
+            Tween t = DOTween.To(() => panel.rectTransform.localPosition, y => panel.rectTransform.localPosition = y, new Vector3(panel.rectTransform.localPosition.x - 150.0f, -150.0f, panel.rectTransform.localPosition.z), 0.5f).SetDelay(Random.Range(0.0f, 0.5f));
             DOTween.To(() => panel.rectTransform.sizeDelta, y => panel.rectTransform.sizeDelta = y, new Vector2(panel.rectTransform.sizeDelta.x + (200 * Random.Range(-2.0f, 2.0f)), panel.rectTransform.sizeDelta.y), 2f);
             if (count == panels.Count)
             {

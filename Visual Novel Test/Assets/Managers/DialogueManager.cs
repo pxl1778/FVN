@@ -9,6 +9,7 @@ using System.Globalization;
 using DG.Tweening;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.SceneManagement;
 
 public class DialogueManager : MonoBehaviour
 {
@@ -71,6 +72,10 @@ public class DialogueManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        if(PlayerPrefs.GetString(DataConstants.PLAYERPREFS_CURRENTSCENE) != "")
+        {
+            DialogueFileName = PlayerPrefs.GetString(DataConstants.PLAYERPREFS_CURRENTSCENE);
+        }
         LoadDialogue();
     }
 
