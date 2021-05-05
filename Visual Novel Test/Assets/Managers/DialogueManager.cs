@@ -10,8 +10,9 @@ using DG.Tweening;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.SceneManagement;
+using UnityEngine.EventSystems;
 
-public class DialogueManager : MonoBehaviour
+public class DialogueManager : MonoBehaviour, IPointerClickHandler
 {
     [SerializeField]
     private string DialogueFileName;
@@ -82,11 +83,16 @@ public class DialogueManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if ((Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0)) && active)
+        if (Input.GetKeyDown(KeyCode.Space)/* && active*/)
         {
             HandleInput();
         }
         TextAnimation();
+    }
+
+    public void OnPointerClick(PointerEventData e)
+    {
+        HandleInput();
     }
 
     void LoadDialogue()
@@ -263,10 +269,10 @@ public class DialogueManager : MonoBehaviour
             currentBackground = GameObject.Instantiate(BackgroundPrefab, BackgroundsParent.transform).GetComponent<Image>();
             currentBackground.sprite = backgroundDictionary[current.Background];
             currentBackground.color = new Color(1.0f, 1.0f, 1.0f, 0.0f);
-            currentBackground.DOFade(1, 2.0f).OnComplete(() =>
+            tweenSequence.Append(currentBackground.DOFade(1, 2.0f).OnComplete(() =>
             {
                 GameObject.Destroy(prevBackground.gameObject);
-            });
+            }));
         }
         if (current.Music != "")
         {
@@ -330,7 +336,10 @@ public class DialogueManager : MonoBehaviour
                     plateTween = NamePlate.rectTransform.DOAnchorPosY(0, 0.3f, true);
                     plateTween.onComplete = () =>
                     {
-                        currentCharacter = 0;
+                        if (!moveOn)
+                        {
+                            currentCharacter = 0;
+                        }
                         timer = 0;
                         active = true;
                     };
@@ -352,7 +361,10 @@ public class DialogueManager : MonoBehaviour
                         plateTween = NamePlate.rectTransform.DOAnchorPosY(0, 0.3f);
                         plateTween.onComplete = () =>
                         {
-                            currentCharacter = 0;
+                            if (!moveOn)
+                            {
+                                currentCharacter = 0;
+                            }
                             timer = 0;
                             active = true;
                         };
@@ -370,7 +382,10 @@ public class DialogueManager : MonoBehaviour
                 plateTween = NamePlate.rectTransform.DOAnchorPosY(-NamePlate.rectTransform.sizeDelta.y, 0.3f, true);
                 plateTween.onComplete = () =>
                 {
-                    currentCharacter = 0;
+                    if (!moveOn)
+                    {
+                        currentCharacter = 0;
+                    }
                     timer = 0;
                     active = true;
                     NameText.text = "";
@@ -378,7 +393,10 @@ public class DialogueManager : MonoBehaviour
             }
             else
             {
-                currentCharacter = 0;
+                if (!moveOn)
+                {
+                    currentCharacter = 0;
+                }
                 timer = 0;
                 active = true;
             }
@@ -391,25 +409,29 @@ public class DialogueManager : MonoBehaviour
 
     void HandleInput()
     {
-        if (moveOn)
+        if(currentLine > -1)
         {
-            if(currentLine + 1 < lines.Count)
+            if (moveOn)
             {
-                //Next line
-                ContinueDialogue();
-                moveOn = false;
+                if (currentLine + 1 < lines.Count)
+                {
+                    //Next line
+                    ContinueDialogue();
+                    moveOn = false;
+                }
+                else
+                {
+                    SceneEnd();
+                }
             }
             else
             {
-                SceneEnd();
+                //Skip animation.
+                tweenSequence.Complete();
+                BoxText.text = lines[currentLine].Text;
+                currentCharacter = lines[currentLine].Text.Length;
+                moveOn = true;
             }
-        }
-        else
-        {
-            //Skip animation.
-            BoxText.text = lines[currentLine].Text;
-            currentCharacter = lines[currentLine].Text.Length;
-            moveOn = true;
         }
     }
 
