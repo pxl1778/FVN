@@ -21,6 +21,8 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
     [SerializeField]
     protected GameObject SpritesParent;
     [SerializeField]
+    protected GameObject HitBox;
+    [SerializeField]
     protected GameObject BackgroundPrefab;
     [SerializeField]
     protected GameObject SpritesPrefab;
@@ -44,8 +46,10 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
     protected int currentLine = -1;
     protected int currentCharacter;
     private float timer = 0;
+    private float timeScale = 1.0f;
     private bool active = false;
     private bool moveOn = false;
+    private bool paused = false;
     private Vector3 originalBoxPosition;
     private List<DialogueLine> lines;
     private Sequence tweenSequence;
@@ -77,13 +81,15 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
         {
             DialogueFileName = PlayerPrefs.GetString(DataConstants.PLAYERPREFS_CURRENTSCENE);
         }
+        GameManager.instance.EventManager.Pause.AddListener(() => { paused = true; tweenSequence?.Pause(); timeScale = 0.0f; });
+        GameManager.instance.EventManager.Unpause.AddListener(() => { paused = false; tweenSequence?.TogglePause(); timeScale = 1.0f; });
         LoadDialogue();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.Space)/* && active*/)
+        if (Input.GetButtonDown("Jump") && !paused)
         {
             HandleInput();
         }
@@ -92,7 +98,10 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
 
     public void OnPointerClick(PointerEventData e)
     {
-        HandleInput();
+        if(e.pointerCurrentRaycast.gameObject == HitBox)
+        {
+            HandleInput();
+        }
     }
 
     void LoadDialogue()
@@ -213,7 +222,7 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
     {
         if (active && currentCharacter < lines[currentLine].Text.Length)
         {
-            timer += Time.deltaTime;
+            timer += Time.deltaTime * timeScale;
             if (timer >= textSpeed)
             {
                 BoxText.text = lines[currentLine].Text.Substring(0, currentCharacter + 1);
