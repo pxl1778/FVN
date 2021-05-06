@@ -16,7 +16,7 @@ public class PauseMenu : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+        this.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, 0);
     }
 
     // Update is called once per frame
@@ -37,7 +37,7 @@ public class PauseMenu : MonoBehaviour
         }
     }
 
-    public void OnResumeButtonClicked()
+    public void OnFastForwardButtonClicked()
     {
 
     }
@@ -57,7 +57,7 @@ public class PauseMenu : MonoBehaviour
 
     }
 
-    public void OnTitleButtonClicked()
+    public void OnHomeButtonClicked()
     {
 
     }
