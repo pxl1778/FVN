@@ -68,6 +68,11 @@ public class PauseMenu : MonoBehaviour, IPointerEnterHandler
         }
     }
 
+    public void OnHistoryButtonClicked()
+    {
+
+    }
+
     public void OnFastForwardButtonClicked()
     {
 
