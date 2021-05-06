@@ -12,7 +12,7 @@ public class PauseMenu : MonoBehaviour, IPointerEnterHandler
     [SerializeField]
     private Button PauseButton;
     [SerializeField]
-    private Button FastForwardButton;
+    private Button HistoryButton;
 
     private Tween rotateTween;
     private Tween positionTween;
@@ -34,14 +34,14 @@ public class PauseMenu : MonoBehaviour, IPointerEnterHandler
         {
             if (eventSystem.currentSelectedGameObject == null && (Input.GetAxis("Horizontal") > 0.1 || Input.GetAxis("Horizontal") < -0.1f))
             {
-                eventSystem.SetSelectedGameObject(FastForwardButton.gameObject);
+                eventSystem.SetSelectedGameObject(HistoryButton.gameObject);
             }
             if (Input.GetButtonDown("Pause"))
             {
                 PauseButtonClicked();
                 if (!opened)
                 {
-                    eventSystem.SetSelectedGameObject(FastForwardButton.gameObject);
+                    eventSystem.SetSelectedGameObject(HistoryButton.gameObject);
                 }
             }
             if (eventSystem.currentSelectedGameObject != null && (Input.GetAxis("Mouse X") != 0 || Input.GetAxis("Mouse Y") != 0))
@@ -95,8 +95,6 @@ public class PauseMenu : MonoBehaviour, IPointerEnterHandler
 
     public void OnHomeButtonClicked()
     {
-        //Do some saving stuff
-        //maybe do a warning window
         onTop = false;
         GameObject a = GameManager.instance.UIUtility.CreateAlertBox("Would you like to go back to the title screen?\n(Any unsaved progress will be lost.)", this.transform.parent, () => {
             SceneManager.LoadScene("TitleMenu");
@@ -105,7 +103,6 @@ public class PauseMenu : MonoBehaviour, IPointerEnterHandler
 
     public void OnQuitButtonClicked()
     {
-        //Do warning
         onTop = false;
         GameObject a = GameManager.instance.UIUtility.CreateAlertBox("Would you like to quit the game?\n(Any unsaved progress will be lost.)", this.transform.parent, () => {
             GameObject.Find("GameManager").GetComponent<GameManager>().ExitGame();
