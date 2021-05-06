@@ -23,7 +23,7 @@ public class AlertBox : MonoBehaviour
         Cancel.onClick.AddListener(delegate { GameObject.Destroy(this.gameObject); });
         eventSystem = GameObject.Find("EventSystem").GetComponent<EventSystem>();
         previousButton = eventSystem.currentSelectedGameObject;
-        eventSystem.SetSelectedGameObject(Confirm.gameObject);
+        eventSystem.SetSelectedGameObject(null);
     }
 
     public void SetConfirmDelegate(UnityAction onClick)
@@ -47,9 +47,13 @@ public class AlertBox : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (eventSystem.currentSelectedGameObject == null && (Input.GetAxis("Horizontal") > 0.1 || Input.GetAxis("Horizontal") < -0.1f))
+        if (eventSystem.currentSelectedGameObject == null && (Input.GetAxis("Horizontal") < -0.1f))
         {
             eventSystem.SetSelectedGameObject(Confirm.gameObject);
+        }
+        else if (eventSystem.currentSelectedGameObject == null && (Input.GetAxis("Horizontal") > 0.1))
+        {
+            eventSystem.SetSelectedGameObject(Cancel.gameObject);
         }
         if (eventSystem.currentSelectedGameObject != null && (Input.GetAxis("Mouse X") != 0 || Input.GetAxis("Mouse Y") != 0))
         {
