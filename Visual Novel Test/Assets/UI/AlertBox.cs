@@ -21,6 +21,7 @@ public class AlertBox : MonoBehaviour
     void Start()
     {
         Cancel.onClick.AddListener(delegate { GameObject.Destroy(this.gameObject); });
+        Confirm.onClick.AddListener(delegate { GameObject.Destroy(this.gameObject); });
         eventSystem = GameObject.Find("EventSystem").GetComponent<EventSystem>();
         previousButton = eventSystem.currentSelectedGameObject;
         eventSystem.SetSelectedGameObject(null);

@@ -58,6 +58,8 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
     private Dictionary<string, Sprite> backgroundDictionary = new Dictionary<string, Sprite>();
     private int dataLoaded = 0;
     private Dictionary<string, Image> characterDictionary = new Dictionary<string, Image>();
+    private Dictionary<string, string> choices = new Dictionary<string, string>();
+    private SaveObject currentSave;
 
     const string DIALOGUE = "Dialogue";
     const string CHARACTER = "Character";
@@ -77,7 +79,12 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
     // Start is called before the first frame update
     void Start()
     {
-        if(PlayerPrefs.GetString(DataConstants.PLAYERPREFS_CURRENTSCENE) != "")
+        currentSave = GameManager.instance.SaveManager.GetLoaded();
+        if(currentSave != null)
+        {
+            DialogueFileName = currentSave.sceneName;
+        }
+        else if(PlayerPrefs.GetString(DataConstants.PLAYERPREFS_CURRENTSCENE) != "")
         {
             DialogueFileName = PlayerPrefs.GetString(DataConstants.PLAYERPREFS_CURRENTSCENE);
         }
@@ -98,7 +105,7 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
 
     public void OnPointerClick(PointerEventData e)
     {
-        if(e.pointerCurrentRaycast.gameObject == HitBox)
+        if(e.pointerCurrentRaycast.gameObject == HitBox && !paused)
         {
             HandleInput();
         }
@@ -204,17 +211,109 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
     {
         if(dataLoaded == backgroundDictionary.Keys.Count + spriteDictionary.Keys.Count)
         {
-            if (lines[0].Background != "")
-            {
-                currentBackground = GameObject.Instantiate(BackgroundPrefab, BackgroundsParent.transform).GetComponent<Image>();
-                currentBackground.sprite = backgroundDictionary[lines[0].Background];
-            }
-            FadeImage.color = new Color(0, 0, 0, 1);
-            FadeIn().onComplete = () =>
-            {
-                FadeBoxIn().onComplete = () => { ContinueDialogue(); };
-            };
             originalBoxPosition = Box.rectTransform.anchoredPosition;
+            if (currentSave != null)
+            {
+                CatchUp();
+            }
+            else
+            {
+                if (lines[0].Background != "")
+                {
+                    currentBackground = GameObject.Instantiate(BackgroundPrefab, BackgroundsParent.transform).GetComponent<Image>();
+                    currentBackground.sprite = backgroundDictionary[lines[0].Background];
+                }
+                FadeImage.color = new Color(0, 0, 0, 1);
+                FadeIn().onComplete = () =>
+                {
+                    FadeBoxIn().onComplete = () => { ContinueDialogue(); };
+                };
+            }
+        }
+    }
+
+    void CatchUp()
+    {
+        currentLine = currentSave.line;
+        string catchupBackground = "";
+        Dictionary<string, float> currentSprites = new Dictionary<string, float>();
+        for (int i = 0; i <= currentLine; i++)
+        {
+            catchupBackground = lines[i].Background != "" ? lines[i].Background : catchupBackground;
+            if(lines[i].FadeInList != null)
+            {
+                foreach (string sprite in lines[i].FadeInList)
+                {
+                    string characterName = sprite.Split(' ')[0].Split('_')[0];
+                    string matchingKey = "";
+                    foreach (string spriteKey in currentSprites.Keys)
+                    {
+                        if (spriteKey.Split('_')[0] == characterName)
+                        {
+                            matchingKey = spriteKey;
+                            break;
+                        }
+                    }
+                    float position = 3;
+                    if (matchingKey == "")
+                    {
+                        if (sprite.Split(' ').Length > 1)
+                        {
+                            position = float.Parse(sprite.Split(' ')[1]);
+                        }
+                    }
+                    else
+                    {
+                        position = currentSprites[matchingKey];
+                        currentSprites.Remove(matchingKey);
+                    }
+                    currentSprites.Add(sprite.Split(' ')[0], position);
+                }
+            }
+            if(lines[i].FadeOutList != null)
+            {
+                foreach (string sprite in lines[i].FadeOutList)
+                {
+                    string characterName = sprite.Split(' ')[0].Split('_')[0];
+                    string matchingKey = "";
+                    foreach (string spriteKey in currentSprites.Keys)
+                    {
+                        if (spriteKey.Split('_')[0] == characterName)
+                        {
+                            matchingKey = spriteKey;
+                            break;
+                        }
+                    }
+                    currentSprites.Remove(matchingKey);
+                }
+            }
+        }
+        DisplayBackground(catchupBackground);
+        currentBackground.color = new Color(1.0f, 1.0f, 1.0f, 1.0f);
+        ShowCharacters(currentSprites);
+        FadeBoxIn();
+        moveOn = true;
+        BoxText.text = lines[currentLine].Text;
+        if(lines[currentLine].Character != "")
+        {
+            NamePlate.rectTransform.anchoredPosition = new Vector2(NamePlate.rectTransform.anchoredPosition.x, 0);
+            Color plateColor;
+            ColorUtility.TryParseHtmlString(CharacterData.CharacterPlateColor(lines[currentLine].Character), out plateColor);
+            NamePlate.GetComponent<Image>().color = plateColor;
+            NameText.text = lines[currentLine].Character;
+            Canvas.ForceUpdateCanvases();
+            LayoutRebuilder.ForceRebuildLayoutImmediate(NamePlate.rectTransform);
+        }
+    }
+
+    void ShowCharacters(Dictionary<string, float> characters)
+    {
+        foreach(string key in characters.Keys)
+        {
+            Image currentCharacter = GameObject.Instantiate(SpritesPrefab, SpritesParent.transform).GetComponent<Image>();
+            currentCharacter.rectTransform.anchoredPosition = new Vector2((characters[key] * 500) - 1500, 0);
+            currentCharacter.sprite = spriteDictionary[key];
+            characterDictionary[key.Split('_')[0]] = currentCharacter;
         }
     }
 
@@ -235,6 +334,13 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
                 }
             }
         }
+    }
+
+    void DisplayBackground(string spriteName)
+    {
+        currentBackground = GameObject.Instantiate(BackgroundPrefab, BackgroundsParent.transform).GetComponent<Image>();
+        currentBackground.sprite = backgroundDictionary[spriteName];
+        currentBackground.color = new Color(1.0f, 1.0f, 1.0f, 0.0f);
     }
 
     void ContinueDialogue()
@@ -275,9 +381,7 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
             //change backgroundimage image
             //new image on top, .DOFade image on top
             Image prevBackground = currentBackground;
-            currentBackground = GameObject.Instantiate(BackgroundPrefab, BackgroundsParent.transform).GetComponent<Image>();
-            currentBackground.sprite = backgroundDictionary[current.Background];
-            currentBackground.color = new Color(1.0f, 1.0f, 1.0f, 0.0f);
+            DisplayBackground(current.Background);
             tweenSequence.Append(currentBackground.DOFade(1, 2.0f).OnComplete(() =>
             {
                 GameObject.Destroy(prevBackground.gameObject);
@@ -474,5 +578,15 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
         Vector3 fadePos = originalBoxPosition - new Vector3(0, 50, 0);
         Box.GetComponent<CanvasGroup>().DOFade(0, 0.2f);
         return Box.rectTransform.DOAnchorPosY(fadePos.y, 0.3f);
+    }
+
+    public int GetCurrentLine()
+    {
+        return currentLine;
+    }
+
+    public Dictionary<string, string> GetChoices()
+    {
+        return choices;
     }
 }

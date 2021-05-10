@@ -8,6 +8,7 @@ public class GameManager : MonoBehaviour
     
     public EventManager EventManager { get; private set; }
     public UIUtility UIUtility { get; private set; }
+    public SaveManager SaveManager { get; private set; }
 
     private void Awake()
     {
@@ -17,6 +18,7 @@ public class GameManager : MonoBehaviour
             instance = this;
             EventManager = this.GetComponent<EventManager>();
             UIUtility = this.GetComponent<UIUtility>();
+            SaveManager = this.GetComponent<SaveManager>();
         }
         else if (instance != null)
         {

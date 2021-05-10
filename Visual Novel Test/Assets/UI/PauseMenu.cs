@@ -12,6 +12,8 @@ public class PauseMenu : MonoBehaviour, IPointerEnterHandler
     [SerializeField]
     private Button PauseButton;
     [SerializeField]
+    private SaveMenu SaveMenu;
+    [SerializeField]
     private Button HistoryButton;
 
     private Tween rotateTween;
@@ -80,12 +82,14 @@ public class PauseMenu : MonoBehaviour, IPointerEnterHandler
 
     public void OnSaveButtonClicked()
     {
-
+        SaveMenu.SaveMode = true;
+        SaveMenu.gameObject.SetActive(true);
     }
 
     public void OnLoadButtonClicked()
     {
-
+        SaveMenu.SaveMode = false;
+        SaveMenu.gameObject.SetActive(true);
     }
 
     public void OnSettingsButtonClicked()
