@@ -585,6 +585,11 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
         return currentLine;
     }
 
+    public List<DialogueLine> GetLines()
+    {
+        return lines;
+    }
+
     public Dictionary<string, string> GetChoices()
     {
         return choices;

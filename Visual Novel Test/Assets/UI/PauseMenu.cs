@@ -15,18 +15,22 @@ public class PauseMenu : MonoBehaviour, IPointerEnterHandler
     private SaveMenu SaveMenu;
     [SerializeField]
     private Button HistoryButton;
+    [SerializeField]
+    private HistoryMenu HistoryMenu;
 
     private Tween rotateTween;
     private Tween positionTween;
     private bool opened = false;
     private EventSystem eventSystem;
     private bool onTop = true;
+    private Button previousButton;
 
     // Start is called before the first frame update
     void Start()
     {
         this.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, 0);
         eventSystem = GameObject.Find("EventSystem").GetComponent<EventSystem>();
+        previousButton = HistoryButton;
     }
 
     // Update is called once per frame
@@ -70,9 +74,18 @@ public class PauseMenu : MonoBehaviour, IPointerEnterHandler
         }
     }
 
-    public void OnHistoryButtonClicked()
+    public void OnBackButton()
     {
+        onTop = true;
+        eventSystem.SetSelectedGameObject(previousButton.gameObject);
+    }
 
+    public void OnHistoryButtonClicked(Button button)
+    {
+        onTop = false;
+        previousButton = button;
+        HistoryMenu.gameObject.SetActive(true);
+        eventSystem.SetSelectedGameObject(null);
     }
 
     public void OnFastForwardButtonClicked()
@@ -82,6 +95,7 @@ public class PauseMenu : MonoBehaviour, IPointerEnterHandler
 
     public void OnSaveButtonClicked()
     {
+        onTop = false;
         SaveMenu.SaveMode = true;
         SaveMenu.gameObject.SetActive(true);
     }
@@ -117,6 +131,7 @@ public class PauseMenu : MonoBehaviour, IPointerEnterHandler
     private void OpenPauseMenu()
     {
         opened = true;
+        onTop = true;
         if (rotateTween != null) { rotateTween.Kill(); }
         if (positionTween != null) { positionTween.Kill(); }
         rotateTween = PauseButton.GetComponentsInChildren<Image>()[1].rectTransform.DORotate(new Vector3(0.0f, 0.0f, 0.0f), 0.2f);
@@ -127,6 +142,7 @@ public class PauseMenu : MonoBehaviour, IPointerEnterHandler
     private void ClosePauseMenu()
     {
         opened = false;
+        onTop = false;
         if (rotateTween != null) { rotateTween.Kill(); }
         if (positionTween != null) { positionTween.Kill(); }
         rotateTween = PauseButton.GetComponentsInChildren<Image>()[1].rectTransform.DORotate(new Vector3(0.0f, 0.0f, 180.0f), 0.2f);
