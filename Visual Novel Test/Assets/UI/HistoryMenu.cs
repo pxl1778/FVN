@@ -18,6 +18,7 @@ public class HistoryMenu : Graphic
     private Image BlockerPanel;
 
     private int previousLine = 0;
+    private float originalY;
 
     private void OnEnable()
     {
@@ -47,15 +48,21 @@ public class HistoryMenu : Graphic
 
         ScrollRect.verticalNormalizedPosition = 0;
     }
-    
+
+    void Start()
+    {
+        originalY = this.rectTransform.anchoredPosition.y - 50;
+    }
+
     public void BackButton()
     {
-        ScrollRect.GetComponent<CanvasGroup>().DOFade(0, 0.2f).OnComplete( ()=>
+        ScrollRect.GetComponent<CanvasGroup>().DOFade(0, 0.2f);
+        BlockerPanel.DOFade(0.0f, 0.2f);
+        float endYPos = this.rectTransform.anchoredPosition.y-50;
+        this.rectTransform.DOAnchorPosY(endYPos, 0.2f).OnComplete(() =>
         {
+            this.rectTransform.anchoredPosition = new Vector2(this.rectTransform.anchoredPosition.x, originalY);
             this.gameObject.SetActive(false);
         });
-        BlockerPanel.DOFade(0.0f, 0.2f);
-        //float endYPos = this.rectTransform.anchoredPosition.y-50;
-        //this.rectTransform.DOAnchorPosY(endYPos, 0.2f);
     }
 }
