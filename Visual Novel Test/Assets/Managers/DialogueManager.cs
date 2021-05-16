@@ -60,6 +60,7 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
     private Dictionary<string, Image> characterDictionary = new Dictionary<string, Image>();
     private Dictionary<string, string> choices = new Dictionary<string, string>();
     private SaveObject currentSave;
+    private float[] spritePositions = { -1500.0f, -6000.0f, -350.0f, 0.0f, 350.0f, 600.0f, 1500.0f };
 
     const string DIALOGUE = "Dialogue";
     const string CHARACTER = "Character";
@@ -311,7 +312,7 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
         foreach(string key in characters.Keys)
         {
             Image currentCharacter = GameObject.Instantiate(SpritesPrefab, SpritesParent.transform).GetComponent<Image>();
-            currentCharacter.rectTransform.anchoredPosition = new Vector2((characters[key] * 500) - 1500, 0);
+            currentCharacter.rectTransform.anchoredPosition = new Vector2(GetSpritePosition(characters[key]), 0);
             currentCharacter.sprite = spriteDictionary[key];
             characterDictionary[key.Split('_')[0]] = currentCharacter;
         }
@@ -432,7 +433,7 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
                     currentCharacter.color = new Color(1.0f, 1.0f, 1.0f, 0.0f);
                     if (characterArray.Length > 1)
                     {
-                        currentCharacter.rectTransform.anchoredPosition = new Vector2((int.Parse(characterArray[1]) * 500) - 1500, 0);
+                        currentCharacter.rectTransform.anchoredPosition = new Vector2(GetSpritePosition(float.Parse(characterArray[1])), 0);
                     }
                     characterDictionary[characterName] = currentCharacter;
                     tweenSequence.Join(currentCharacter.DOFade(1.0f, 1.0f));
@@ -518,6 +519,21 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
         active = false;
         tweenSequence.Append(nameTween);
         BoxText.text = "";
+    }
+
+    float GetSpritePosition(float pos)
+    {
+        float newPos = 0.0f;
+        int baseIndex = Mathf.FloorToInt(pos);
+        if(baseIndex < spritePositions.Length - 1)
+        {
+            newPos = Mathf.Lerp(spritePositions[baseIndex], spritePositions[baseIndex + 1], pos % 1.0f);
+        }
+        else
+        {
+            newPos = spritePositions[baseIndex-1];
+        }
+        return newPos;
     }
 
     void HandleInput()
