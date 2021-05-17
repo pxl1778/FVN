@@ -61,6 +61,7 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
     private Dictionary<string, string> choices = new Dictionary<string, string>();
     private SaveObject currentSave;
     private float[] spritePositions = { -1500.0f, -6000.0f, -350.0f, 0.0f, 350.0f, 600.0f, 1500.0f };
+    private Tween plateTween = null;
 
     const string DIALOGUE = "Dialogue";
     const string CHARACTER = "Character";
@@ -311,10 +312,10 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
     {
         foreach(string key in characters.Keys)
         {
-            Image currentCharacter = GameObject.Instantiate(SpritesPrefab, SpritesParent.transform).GetComponent<Image>();
-            currentCharacter.rectTransform.anchoredPosition = new Vector2(GetSpritePosition(characters[key]), 0);
-            currentCharacter.sprite = spriteDictionary[key];
-            characterDictionary[key.Split('_')[0]] = currentCharacter;
+            Image currentSprite = GameObject.Instantiate(SpritesPrefab, SpritesParent.transform).GetComponent<Image>();
+            currentSprite.rectTransform.anchoredPosition = new Vector2(GetSpritePosition(characters[key]), 0);
+            currentSprite.sprite = spriteDictionary[key];
+            characterDictionary[key.Split('_')[0]] = currentSprite;
         }
     }
 
@@ -443,7 +444,6 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
         }
         Tween nameTween = Box.DOFade(Box.color.a, 0.1f);
         nameTween.onComplete = () => {
-            Tween plateTween = null;
             if(NameText.text != current.Character && current.Character != ""){
                 if(NameText.text == ""){
                     //character from narrator, tween up from behind
@@ -557,6 +557,7 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
             {
                 //Skip animation.
                 tweenSequence.Complete();
+                plateTween.Complete();
                 BoxText.text = lines[currentLine].Text;
                 currentCharacter = lines[currentLine].Text.Length;
                 moveOn = true;
