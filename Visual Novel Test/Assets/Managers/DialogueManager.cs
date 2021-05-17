@@ -142,9 +142,9 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
                 if(line.Background != "") { backgroundDictionary[line.Background] = null; }
                 line.Music = fieldsDictionary.ContainsKey(MUSIC) ? fields[fieldsDictionary[MUSIC]] : "";
                 line.Sound = fieldsDictionary.ContainsKey(SOUND) ? fields[fieldsDictionary[SOUND]] : "";
-                line.ExclaimTextBox = fieldsDictionary.ContainsKey(EXCLAIM_TEXT_BOX) ? bool.Parse(fields[fieldsDictionary[EXCLAIM_TEXT_BOX]]) : false;
-                line.ScreenFadeIn = fieldsDictionary.ContainsKey(SCREEN_FADE_IN) ? bool.Parse(fields[fieldsDictionary[SCREEN_FADE_IN]]) : false;
-                line.ScreenFadeOut = fieldsDictionary.ContainsKey(SCREEN_FADE_OUT) ? bool.Parse(fields[fieldsDictionary[SCREEN_FADE_OUT]]) : false;
+                line.ExclaimTextBox = fieldsDictionary.ContainsKey(EXCLAIM_TEXT_BOX) && fields[fieldsDictionary[EXCLAIM_TEXT_BOX]] != "" ? bool.Parse(fields[fieldsDictionary[EXCLAIM_TEXT_BOX]]) : false;
+                line.ScreenFadeIn = fieldsDictionary.ContainsKey(SCREEN_FADE_IN) && fields[fieldsDictionary[SCREEN_FADE_IN]] != "" ? bool.Parse(fields[fieldsDictionary[SCREEN_FADE_IN]]) : false;
+                line.ScreenFadeOut = fieldsDictionary.ContainsKey(SCREEN_FADE_OUT) && fields[fieldsDictionary[SCREEN_FADE_OUT]] != "" ? bool.Parse(fields[fieldsDictionary[SCREEN_FADE_OUT]]) : false;
                 line.SpecialActions = fieldsDictionary.ContainsKey(SPECIAL_ACTIONS) ? fields[fieldsDictionary[SPECIAL_ACTIONS]].Split(';') : null;
                 lines.Add(line);
             }
@@ -556,8 +556,8 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
             else
             {
                 //Skip animation.
-                tweenSequence.Complete();
-                plateTween.Complete();
+                tweenSequence?.Complete();
+                plateTween?.Complete();
                 BoxText.text = lines[currentLine].Text;
                 currentCharacter = lines[currentLine].Text.Length;
                 moveOn = true;
