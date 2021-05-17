@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System;
+using System.Threading.Tasks;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
@@ -149,16 +151,33 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
                 lines.Add(line);
             }
         }
-        LoadBackgrounds();
-        LoadSprites();
+        Addressables.InitializeAsync().Completed += (result) =>
+        {
+            LoadBackgrounds();
+            LoadSprites();
+            if(spriteDictionary.Keys.Count == 0 && backgroundDictionary.Keys.Count == 0)
+            {
+                CheckDoneLoading();
+            }
+        };
     }
 
     void LoadBackgrounds()
     {
         foreach(string s in backgroundDictionary.Keys)
         {
-            AsyncOperationHandle<Sprite[]> spriteHandle = Addressables.LoadAssetAsync<Sprite[]>("Assets/Art/Backgrounds/" + s + ".png");
-            spriteHandle.Completed += BackgroundsLoaded;
+            Addressables.LoadResourceLocationsAsync("Assets/Art/Backgrounds/" + s + ".png").Completed += (loc) =>
+            {
+                if(loc.Result.Count > 0)
+                {
+                    AsyncOperationHandle<Sprite[]> spriteHandle = Addressables.LoadAssetAsync<Sprite[]>("Assets/Art/Backgrounds/" + s + ".png");
+                    spriteHandle.Completed += BackgroundsLoaded;
+                }
+                else
+                {
+                    Debug.LogWarning("Trying to load an asset that doesn't exist: " + s);
+                }
+            };
         }
     }
     void LoadSprites()
@@ -442,6 +461,7 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
                 }
             }
         }
+        AddSpecialActions();
         Tween nameTween = Box.DOFade(Box.color.a, 0.1f);
         nameTween.onComplete = () => {
             if(NameText.text != current.Character && current.Character != ""){
@@ -534,6 +554,31 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
             newPos = spritePositions[baseIndex-1];
         }
         return newPos;
+    }
+
+    void AddSpecialActions()
+    {
+        if(lines[currentLine].SpecialActions != null && lines[currentLine].SpecialActions[0] != "")
+        {
+            foreach (string actions in lines[currentLine].SpecialActions)
+            {
+                foreach (string action in actions.Split(','))
+                {
+                    string character = action.Split(' ')[0];
+                    string keyword = action.Split(' ')[1];
+                    switch (keyword)
+                    {
+                        case "Flip":
+                            break;
+                        case "Move":
+                            break;
+                        default:
+                            Debug.Log("Could not find correct special actions keyword at line " + currentLine + " in sheet " + DialogueFileName);
+                            break;
+                    }
+                }
+            }
+        }
     }
 
     void HandleInput()
