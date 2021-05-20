@@ -62,7 +62,7 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
     private Dictionary<string, Image> characterDictionary = new Dictionary<string, Image>();
     private Dictionary<string, string> choices = new Dictionary<string, string>();
     private SaveObject currentSave;
-    private float[] spritePositions = { -1500.0f, -6000.0f, -350.0f, 0.0f, 350.0f, 600.0f, 1500.0f };
+    private float[] spritePositions = { -1500.0f, -600.0f, -350.0f, 0.0f, 350.0f, 600.0f, 1500.0f };
     private Tween plateTween = null;
 
     const string DIALOGUE = "Dialogue";
@@ -133,13 +133,13 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
                 DialogueLine line = new DialogueLine();
                 line.Text = fieldsDictionary.ContainsKey(DIALOGUE) ? fields[fieldsDictionary[DIALOGUE]] : "";
                 line.Character = fieldsDictionary.ContainsKey(CHARACTER) ? fields[fieldsDictionary[CHARACTER]] : "";
-                line.FadeInList = fieldsDictionary.ContainsKey(FADE_IN_LIST) && fields[fieldsDictionary[FADE_IN_LIST]] != "" ? fields[fieldsDictionary[FADE_IN_LIST]].Split(',') : null;
+                line.FadeInList = fieldsDictionary.ContainsKey(FADE_IN_LIST) && fields[fieldsDictionary[FADE_IN_LIST]] != "" ? fields[fieldsDictionary[FADE_IN_LIST]].Trim('"').Split(',') : null;
                 if(line.FadeInList != null)
                 {
                     List<string> sList = line.FadeInList.ToList();
                     line.FadeInList.ToList().ForEach(s => {
                         spriteDictionary[s.Split(' ')[0]] = null; }); }
-                line.FadeOutList = fieldsDictionary.ContainsKey(FADE_OUT_LIST) && fields[fieldsDictionary[FADE_OUT_LIST]] != "" ? fields[fieldsDictionary[FADE_OUT_LIST]].Split(',') : null;
+                line.FadeOutList = fieldsDictionary.ContainsKey(FADE_OUT_LIST) && fields[fieldsDictionary[FADE_OUT_LIST]] != "" ? fields[fieldsDictionary[FADE_OUT_LIST]].Trim('"').Split(',') : null;
                 line.Background = fieldsDictionary.ContainsKey(BACKGROUND) ? fields[fieldsDictionary[BACKGROUND]] : "";
                 if(line.Background != "") { backgroundDictionary[line.Background] = null; }
                 line.Music = fieldsDictionary.ContainsKey(MUSIC) ? fields[fieldsDictionary[MUSIC]] : "";
@@ -147,7 +147,7 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
                 line.ExclaimTextBox = fieldsDictionary.ContainsKey(EXCLAIM_TEXT_BOX) && fields[fieldsDictionary[EXCLAIM_TEXT_BOX]] != "" ? bool.Parse(fields[fieldsDictionary[EXCLAIM_TEXT_BOX]]) : false;
                 line.ScreenFadeIn = fieldsDictionary.ContainsKey(SCREEN_FADE_IN) && fields[fieldsDictionary[SCREEN_FADE_IN]] != "" ? bool.Parse(fields[fieldsDictionary[SCREEN_FADE_IN]]) : false;
                 line.ScreenFadeOut = fieldsDictionary.ContainsKey(SCREEN_FADE_OUT) && fields[fieldsDictionary[SCREEN_FADE_OUT]] != "" ? bool.Parse(fields[fieldsDictionary[SCREEN_FADE_OUT]]) : false;
-                line.SpecialActions = fieldsDictionary.ContainsKey(SPECIAL_ACTIONS) ? fields[fieldsDictionary[SPECIAL_ACTIONS]].Split(';') : null;
+                line.SpecialActions = fieldsDictionary.ContainsKey(SPECIAL_ACTIONS) ? fields[fieldsDictionary[SPECIAL_ACTIONS]].Trim('"').Split(';') : null;
                 lines.Add(line);
             }
         }
@@ -564,13 +564,17 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
             {
                 foreach (string action in actions.Split(','))
                 {
-                    string character = action.Split(' ')[0];
-                    string keyword = action.Split(' ')[1];
+                    string trimmedAction = action.Trim();
+                    string character = trimmedAction.Split(' ')[0];
+                    string keyword = trimmedAction.Split(' ')[1];
                     switch (keyword)
                     {
                         case "Flip":
+                            tweenSequence.Append(characterDictionary[character].rectTransform.DOScaleX(characterDictionary[character].rectTransform.localScale.x * -1, 0.1f));
                             break;
                         case "Move":
+                            float movePos = float.Parse(trimmedAction.Split(' ')[2]);
+                            tweenSequence.Append(characterDictionary[character].rectTransform.DOAnchorPosX(GetSpritePosition(movePos), 1.0f));
                             break;
                         default:
                             Debug.Log("Could not find correct special actions keyword at line " + currentLine + " in sheet " + DialogueFileName);

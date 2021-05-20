@@ -1,12 +1,14 @@
 Dialogue,Character,Fade In (List Characters),Fade Out (List Characters),Background,Music,Sound,Exclaim Text Box,Screen Fade In,Screen Fade Out,Special Actions
 "Welp, looks like it's time to get up. I can smell something good downstairs...",,,,Bedroom,,,FALSE,FALSE,FALSE,
 *Knock Knock*,,,,,,Knock,FALSE,FALSE,FALSE,
-Just a bit more sleep...,,,,,,,FALSE,FALSE,TRUE,
+Just a bit more sleep...,,,,Black,,,FALSE,FALSE,FALSE,
 *KNOCK KNOCK*,,,,,,Knock,TRUE,FALSE,FALSE,
-"The door's open, yah know!",Player,,,,,,FALSE,TRUE,FALSE,
+"The door's open, yah know!",Player,,,Bedroom,,,FALSE,FALSE,FALSE,
 Mornin' buddy!,LI,LI_Idle 3,,,,,FALSE,FALSE,FALSE,
-Can't you bring the food up here instead of banging on my door?,Player,LI_Frown,,,,,FALSE,FALSE,FALSE,
-No can do! The food is already sitting on the kitchen table ready for you to arrive!,LI,LI_Idle,,,,,FALSE,FALSE,FALSE,
+Can't you bring the food up here instead of banging on my door?,Player,,,,,,FALSE,FALSE,FALSE,
+"LI walks over to the curtains and opens them up, letting in rays of sunshine so pleasant to most. Annoying to me.",,,,,,,FALSE,FALSE,FALSE,LI Move 1
+"There we go, let's let some sunshine in here!",LI,,,,,,FALSE,FALSE,FALSE,"LI Flip, LI Move 3"
+The food is already sitting on the kitchen table ready for you to arrive!,LI,,,,,,FALSE,FALSE,FALSE,
 Come down quickly before it gets coooold!,LI,,LI_Idle,,,,FALSE,FALSE,FALSE,
 Breakfast does sound pretty great right now.,,,,,,,FALSE,FALSE,FALSE,
 "The kitchen ain't bad. Got your microwave, oven, stovetop, kitchen table, drawers and cupboards filled with utensils and equipment.",,LI_Idle 3,,Kitchen,,,FALSE,FALSE,FALSE,
