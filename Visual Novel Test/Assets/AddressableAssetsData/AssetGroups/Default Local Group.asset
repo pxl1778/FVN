@@ -53,6 +53,12 @@ MonoBehaviour:
     m_SerializedLabels: []
     m_MainAsset: {fileID: 0}
     m_TargetAsset: {fileID: 0}
+  - m_GUID: c780bbc793b0931488fbed7e0151f75c
+    m_Address: Assets/Audio/Music/morningbirds.wav
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    m_MainAsset: {fileID: 0}
+    m_TargetAsset: {fileID: 0}
   - m_GUID: c86f7bd2b73921a419c0316092334861
     m_Address: Assets/Art/Sprites/Character3/Character3_Frown.png
     m_ReadOnly: 0
@@ -61,6 +67,24 @@ MonoBehaviour:
     m_TargetAsset: {fileID: 0}
   - m_GUID: d339c5ebc0b9f084b90fdcda680e9034
     m_Address: Assets/Art/Backgrounds/Bedroom.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    m_MainAsset: {fileID: 0}
+    m_TargetAsset: {fileID: 0}
+  - m_GUID: d3d25616f22c70447b3ea4b6ff1331e8
+    m_Address: Assets/Audio/Sound Effects/downstairs.wav
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    m_MainAsset: {fileID: 0}
+    m_TargetAsset: {fileID: 0}
+  - m_GUID: f1ab0ea88e9bfbb478343bb3ce4fb798
+    m_Address: Assets/Audio/Sound Effects/knocking.mp3
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    m_MainAsset: {fileID: 0}
+    m_TargetAsset: {fileID: 0}
+  - m_GUID: f7cb611df3852f041abda7ef47f3a03e
+    m_Address: Assets/Audio/Sound Effects/heavycurtain.wav
     m_ReadOnly: 0
     m_SerializedLabels: []
     m_MainAsset: {fileID: 0}

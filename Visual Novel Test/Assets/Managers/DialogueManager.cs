@@ -58,6 +58,8 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
     private Image currentBackground;
     private Dictionary<string, Sprite> spriteDictionary = new Dictionary<string, Sprite>();
     private Dictionary<string, Sprite> backgroundDictionary = new Dictionary<string, Sprite>();
+    private Dictionary<string, AudioClip> musicDictionary = new Dictionary<string, AudioClip>();
+    private Dictionary<string, AudioClip> soundDictionary = new Dictionary<string, AudioClip>();
     private int dataLoaded = 0;
     private Dictionary<string, Image> characterDictionary = new Dictionary<string, Image>();
     private Dictionary<string, string> choices = new Dictionary<string, string>();
@@ -143,7 +145,9 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
                 line.Background = fieldsDictionary.ContainsKey(BACKGROUND) ? fields[fieldsDictionary[BACKGROUND]] : "";
                 if(line.Background != "") { backgroundDictionary[line.Background] = null; }
                 line.Music = fieldsDictionary.ContainsKey(MUSIC) ? fields[fieldsDictionary[MUSIC]] : "";
+                if(line.Music != "" && line.Music != "none") { musicDictionary[line.Music] = null; }
                 line.Sound = fieldsDictionary.ContainsKey(SOUND) ? fields[fieldsDictionary[SOUND]] : "";
+                if (line.Sound != "") { soundDictionary[line.Sound] = null; }
                 line.ExclaimTextBox = fieldsDictionary.ContainsKey(EXCLAIM_TEXT_BOX) && fields[fieldsDictionary[EXCLAIM_TEXT_BOX]] != "" ? bool.Parse(fields[fieldsDictionary[EXCLAIM_TEXT_BOX]]) : false;
                 line.ScreenFadeIn = fieldsDictionary.ContainsKey(SCREEN_FADE_IN) && fields[fieldsDictionary[SCREEN_FADE_IN]] != "" ? bool.Parse(fields[fieldsDictionary[SCREEN_FADE_IN]]) : false;
                 line.ScreenFadeOut = fieldsDictionary.ContainsKey(SCREEN_FADE_OUT) && fields[fieldsDictionary[SCREEN_FADE_OUT]] != "" ? bool.Parse(fields[fieldsDictionary[SCREEN_FADE_OUT]]) : false;
@@ -155,11 +159,99 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
         {
             LoadBackgrounds();
             LoadSprites();
-            if(spriteDictionary.Keys.Count == 0 && backgroundDictionary.Keys.Count == 0)
+            LoadMusic();
+            LoadSound();
+            if (spriteDictionary.Keys.Count == 0 && backgroundDictionary.Keys.Count == 0 && musicDictionary.Keys.Count == 0 && soundDictionary.Keys.Count == 0)
             {
                 CheckDoneLoading();
             }
         };
+    }
+
+    void LoadMusic()
+    {
+        foreach(string s in musicDictionary.Keys)
+        {
+            Addressables.LoadResourceLocationsAsync("Assets/Audio/Music/" + s).Completed += (loc) =>
+            {
+                if (loc.Result.Count > 0)
+                {
+                    AsyncOperationHandle<AudioClip[]> handle = Addressables.LoadAssetAsync<AudioClip[]>("Assets/Audio/Music/" + s);
+                    handle.Completed += MusicLoaded;
+                }
+                else
+                {
+                    Debug.LogWarning("Trying to load an asset that doesn't exist: " + s);
+                }
+            };
+        }
+    }
+
+    void MusicLoaded(AsyncOperationHandle<AudioClip[]> handleToCheck)
+    {
+        if (handleToCheck.Status == AsyncOperationStatus.Succeeded)
+        {
+            AudioClip[] clipArray = handleToCheck.Result;
+            foreach (string s in musicDictionary.Keys)
+            {
+                if (s.Substring(0, s.Length - 4) == clipArray[0].name)
+                {
+                    musicDictionary[s] = clipArray[0];
+                    dataLoaded++;
+                    CheckDoneLoading();
+                    return;
+                }
+            }
+            Debug.LogWarning("Music name not consistent: " + clipArray[0].name);
+        }
+        else
+        {
+            Debug.LogWarning("Issue with Loading Music: " + handleToCheck.Status);
+        }
+        CheckDoneLoading();
+    }
+
+    void LoadSound()
+    {
+        foreach (string s in soundDictionary.Keys)
+        {
+            Addressables.LoadResourceLocationsAsync("Assets/Audio/Sound Effects/" + s).Completed += (loc) =>
+            {
+                if (loc.Result.Count > 0)
+                {
+                    AsyncOperationHandle<AudioClip[]> handle = Addressables.LoadAssetAsync<AudioClip[]>("Assets/Audio/Sound Effects/" + s);
+                    handle.Completed += SoundLoaded;
+                }
+                else
+                {
+                    Debug.LogWarning("Trying to load an asset that doesn't exist: " + s);
+                }
+            };
+        }
+    }
+
+    void SoundLoaded(AsyncOperationHandle<AudioClip[]> handleToCheck)
+    {
+        if (handleToCheck.Status == AsyncOperationStatus.Succeeded)
+        {
+            AudioClip[] clipArray = handleToCheck.Result;
+            foreach(string s in soundDictionary.Keys)
+            {
+                if (s.Substring(0, s.Length - 4) == clipArray[0].name)
+                {
+                    soundDictionary[s] = clipArray[0];
+                    dataLoaded++;
+                    CheckDoneLoading();
+                    return;
+                }
+            }
+            Debug.LogWarning("Sound name not consistent: " + clipArray[0].name);
+        }
+        else
+        {
+            Debug.LogWarning("Issue with Loading Sounds: " + handleToCheck.Status);
+        }
+        CheckDoneLoading();
     }
 
     void LoadBackgrounds()
@@ -180,6 +272,26 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
             };
         }
     }
+
+    void BackgroundsLoaded(AsyncOperationHandle<Sprite[]> handleToCheck)
+    {
+        if (handleToCheck.Status == AsyncOperationStatus.Succeeded)
+        {
+            Sprite[] spriteArray = handleToCheck.Result;
+            if (!backgroundDictionary.ContainsKey(spriteArray[0].name))
+            {
+                Debug.LogWarning("Background name not consistent: " + spriteArray[0].name);
+            }
+            backgroundDictionary[spriteArray[0].name] = spriteArray[0];
+            dataLoaded++;
+        }
+        else
+        {
+            Debug.LogWarning("Issue with Loading Backgrounds: " + handleToCheck.Status);
+        }
+        CheckDoneLoading();
+    }
+
     void LoadSprites()
     {
         foreach (string s in spriteDictionary.Keys)
@@ -209,28 +321,9 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
         CheckDoneLoading();
     }
 
-    void BackgroundsLoaded(AsyncOperationHandle<Sprite[]> handleToCheck)
-    {
-        if (handleToCheck.Status == AsyncOperationStatus.Succeeded)
-        {
-            Sprite[] spriteArray = handleToCheck.Result;
-            if (!backgroundDictionary.ContainsKey(spriteArray[0].name))
-            {
-                Debug.LogWarning("Background name not consistent: " + spriteArray[0].name);
-            }
-            backgroundDictionary[spriteArray[0].name] = spriteArray[0];
-            dataLoaded++;
-        }
-        else
-        {
-            Debug.LogWarning("Issue with Loading Backgrounds: " + handleToCheck.Status);
-        }
-        CheckDoneLoading();
-    }
-
     void CheckDoneLoading()
     {
-        if(dataLoaded == backgroundDictionary.Keys.Count + spriteDictionary.Keys.Count)
+        if (dataLoaded == backgroundDictionary.Keys.Count + spriteDictionary.Keys.Count + musicDictionary.Keys.Count + soundDictionary.Keys.Count)
         {
             originalBoxPosition = Box.rectTransform.anchoredPosition;
             if (currentSave != null)
@@ -412,7 +505,19 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
         {
             //music
             Tween musicTween = Box.DOFade(Box.color.a, 0.1f);
-            musicTween.onComplete = () => { Debug.Log("ChangeMusic: " + current.Music); };
+            musicTween.onComplete = () => {
+                Debug.Log("ChangeMusic: " + current.Music);
+                if(current.Music != "none")
+                {
+                    MusicTrack.Stop();
+                    MusicTrack.clip = musicDictionary[current.Music];
+                    MusicTrack.Play();
+                }
+                else
+                {
+                    MusicTrack.DOFade(0, 1.0f);
+                }
+            };
             tweenSequence.Append(musicTween);
         }
         Image i = Box.GetComponent<Image>();
@@ -421,6 +526,8 @@ public class DialogueManager : MonoBehaviour, IPointerClickHandler
             if (current.Sound != "")
             {
                 Debug.Log("ChangeSound: " + current.Sound);
+                SoundEffect.clip = soundDictionary[current.Sound];
+                SoundEffect.Play();
             }
             if (current.ExclaimTextBox == (Box.GetComponent<Image>().sprite.name == NORMAL_TEXTBOX_NAME))
             {
