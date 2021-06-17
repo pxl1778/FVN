@@ -41,6 +41,12 @@ MonoBehaviour:
     m_SerializedLabels: []
     m_MainAsset: {fileID: 0}
     m_TargetAsset: {fileID: 0}
+  - m_GUID: 5942b67d87cb3c643bafadfbf22a4fd3
+    m_Address: Assets/TestingFolder/LI/LI.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    m_MainAsset: {fileID: 0}
+    m_TargetAsset: {fileID: 0}
   - m_GUID: 62514e7c72d70a34ab6f6c3140616e63
     m_Address: Assets/Art/Sprites/Character2/Character2_Frown.png
     m_ReadOnly: 0
@@ -61,6 +67,12 @@ MonoBehaviour:
     m_TargetAsset: {fileID: 0}
   - m_GUID: c86f7bd2b73921a419c0316092334861
     m_Address: Assets/Art/Sprites/Character3/Character3_Frown.png
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    m_MainAsset: {fileID: 0}
+    m_TargetAsset: {fileID: 0}
+  - m_GUID: d1f30edc5e14f6a41bbd751ef70b59a2
+    m_Address: Assets/TestingFolder/LI/sprites
     m_ReadOnly: 0
     m_SerializedLabels: []
     m_MainAsset: {fileID: 0}
