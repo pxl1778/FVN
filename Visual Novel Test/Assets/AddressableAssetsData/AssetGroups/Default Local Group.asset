@@ -17,6 +17,12 @@ MonoBehaviour:
     m_SerializedData: []
   m_GUID: 39bad514ab057154ab8327c152ebeb5f
   m_SerializeEntries:
+  - m_GUID: 04b01f41c6dc47740ab79c2fd3197965
+    m_Address: Assets/Art/Characters/LI1/LI1.prefab
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    m_MainAsset: {fileID: 0}
+    m_TargetAsset: {fileID: 0}
   - m_GUID: 0adbcf05edfd56e439400ec6d1251ca0
     m_Address: Assets/Art/Sprites/Character2/Character2_Idle.png
     m_ReadOnly: 0
@@ -42,7 +48,7 @@ MonoBehaviour:
     m_MainAsset: {fileID: 0}
     m_TargetAsset: {fileID: 0}
   - m_GUID: 5942b67d87cb3c643bafadfbf22a4fd3
-    m_Address: Assets/TestingFolder/LI/LI.prefab
+    m_Address: Assets/Art/Characters/LI/LI.prefab
     m_ReadOnly: 0
     m_SerializedLabels: []
     m_MainAsset: {fileID: 0}
@@ -85,6 +91,12 @@ MonoBehaviour:
     m_TargetAsset: {fileID: 0}
   - m_GUID: d3d25616f22c70447b3ea4b6ff1331e8
     m_Address: Assets/Audio/Sound Effects/downstairs.wav
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    m_MainAsset: {fileID: 0}
+    m_TargetAsset: {fileID: 0}
+  - m_GUID: eda04950faffcc0499bad68b774ee4a1
+    m_Address: Assets/Art/Characters/LI2/LI2.prefab
     m_ReadOnly: 0
     m_SerializedLabels: []
     m_MainAsset: {fileID: 0}

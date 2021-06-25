@@ -69,6 +69,11 @@ public class AnimatedSprite : MonoBehaviour
     //    }
     //}
 
+    public void ToggleTalking(bool isTalking)
+    {
+        animator.SetBool("Talking", isTalking);
+    }
+
     public void PlayAnimation(string pAnimName)
     {
         bool exists = false;

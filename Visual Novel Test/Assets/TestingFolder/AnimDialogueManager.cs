@@ -56,12 +56,12 @@ public class AnimDialogueManager : MonoBehaviour, IPointerClickHandler
     private List<DialogueLine> lines;
     private Sequence tweenSequence;
     private Image currentBackground;
-    private Dictionary<string, Sprite> spriteDictionary = new Dictionary<string, Sprite>();
+    private Dictionary<string, GameObject> prefabDictionary = new Dictionary<string, GameObject>();
     private Dictionary<string, Sprite> backgroundDictionary = new Dictionary<string, Sprite>();
     private Dictionary<string, AudioClip> musicDictionary = new Dictionary<string, AudioClip>();
     private Dictionary<string, AudioClip> soundDictionary = new Dictionary<string, AudioClip>();
     private int dataLoaded = 0;
-    private Dictionary<string, Image> characterDictionary = new Dictionary<string, Image>();
+    private Dictionary<string, AnimatedSprite> characterDictionary = new Dictionary<string, AnimatedSprite>();
     private Dictionary<string, string> choices = new Dictionary<string, string>();
     private SaveObject currentSave;
     private float[] spritePositions = { -1500.0f, -600.0f, -350.0f, 0.0f, 350.0f, 600.0f, 1500.0f };
@@ -140,7 +140,7 @@ public class AnimDialogueManager : MonoBehaviour, IPointerClickHandler
                 {
                     List<string> sList = line.FadeInList.ToList();
                     line.FadeInList.ToList().ForEach(s => {
-                        spriteDictionary[s.Split(' ')[0]] = null;
+                        prefabDictionary[s.Split(' ')[0].Split('_')[0]] = null;
                     });
                 }
                 line.FadeOutList = fieldsDictionary.ContainsKey(FADE_OUT_LIST) && fields[fieldsDictionary[FADE_OUT_LIST]] != "" ? fields[fieldsDictionary[FADE_OUT_LIST]].Trim('"').Split(',') : null;
@@ -160,10 +160,10 @@ public class AnimDialogueManager : MonoBehaviour, IPointerClickHandler
         Addressables.InitializeAsync().Completed += (result) =>
         {
             LoadBackgrounds();
-            LoadSprites();
+            LoadSpritePrefabs();
             LoadMusic();
             LoadSound();
-            if (spriteDictionary.Keys.Count == 0 && backgroundDictionary.Keys.Count == 0 && musicDictionary.Keys.Count == 0 && soundDictionary.Keys.Count == 0)
+            if (prefabDictionary.Keys.Count == 0 && backgroundDictionary.Keys.Count == 0 && musicDictionary.Keys.Count == 0 && soundDictionary.Keys.Count == 0)
             {
                 CheckDoneLoading();
             }
@@ -294,26 +294,26 @@ public class AnimDialogueManager : MonoBehaviour, IPointerClickHandler
         CheckDoneLoading();
     }
 
-    void LoadSprites()
+    void LoadSpritePrefabs()
     {
-        foreach (string s in spriteDictionary.Keys)
+        foreach (string s in prefabDictionary.Keys)
         {
             string characterName = s.Split('_')[0];
-            AsyncOperationHandle<Sprite[]> spriteHandle = Addressables.LoadAssetAsync<Sprite[]>("Assets/Art/Sprites/" + characterName + "/" + s + ".png");
-            spriteHandle.Completed += SpritesLoaded;
+            AsyncOperationHandle<GameObject> spriteHandle = Addressables.LoadAssetAsync<GameObject>("Assets/Art/Characters/" + characterName + "/" + characterName + ".prefab");
+            spriteHandle.Completed += SpritePrefabsLoaded;
         }
     }
 
-    void SpritesLoaded(AsyncOperationHandle<Sprite[]> handleToCheck)
+    void SpritePrefabsLoaded(AsyncOperationHandle<GameObject> handleToCheck)
     {
         if (handleToCheck.Status == AsyncOperationStatus.Succeeded)
         {
-            Sprite[] spriteArray = handleToCheck.Result;
-            if (!spriteDictionary.ContainsKey(spriteArray[0].name))
+            GameObject loadedObject = handleToCheck.Result;
+            if (!prefabDictionary.ContainsKey(loadedObject.name))
             {
-                Debug.LogWarning("Sprite name not consistent: " + spriteArray[0].name);
+                Debug.LogWarning("Sprite Prefab name not consistent: " + loadedObject.name);
             }
-            spriteDictionary[spriteArray[0].name] = spriteArray[0];
+            prefabDictionary[loadedObject.name] = loadedObject;
             dataLoaded++;
         }
         else
@@ -325,7 +325,7 @@ public class AnimDialogueManager : MonoBehaviour, IPointerClickHandler
 
     void CheckDoneLoading()
     {
-        if (dataLoaded == backgroundDictionary.Keys.Count + spriteDictionary.Keys.Count + musicDictionary.Keys.Count + soundDictionary.Keys.Count)
+        if (dataLoaded == backgroundDictionary.Keys.Count + prefabDictionary.Keys.Count + musicDictionary.Keys.Count + soundDictionary.Keys.Count)
         {
             originalBoxPosition = Box.rectTransform.anchoredPosition;
             if (currentSave != null)
@@ -426,10 +426,13 @@ public class AnimDialogueManager : MonoBehaviour, IPointerClickHandler
     {
         foreach (string key in characters.Keys)
         {
-            Image currentSprite = GameObject.Instantiate(SpritesPrefab, SpritesParent.transform).GetComponent<Image>();
+            string characterName = key.Split('_')[0];
+            string animName = key.Split('_')[1];
+            GameObject characterObject = GameObject.Instantiate(prefabDictionary[key], SpritesParent.transform);
+            Image currentSprite = characterObject.GetComponent<Image>();
+            characterObject.GetComponent<AnimatedSprite>().PlayAnimation(animName);
             currentSprite.rectTransform.anchoredPosition = new Vector2(GetSpritePosition(characters[key]), 0);
-            currentSprite.sprite = spriteDictionary[key];
-            characterDictionary[key.Split('_')[0]] = currentSprite;
+            characterDictionary[key.Split('_')[0]] = characterObject.GetComponent<AnimatedSprite>();
         }
     }
 
@@ -447,6 +450,10 @@ public class AnimDialogueManager : MonoBehaviour, IPointerClickHandler
                 {
                     //end of line
                     moveOn = true;
+                    if (lines[currentLine].Character != "" && lines[currentLine].Character != "Player" && characterDictionary.ContainsKey(lines[currentLine].Character))
+                    {
+                        characterDictionary[lines[currentLine].Character].ToggleTalking(false);
+                    }
                 }
             }
         }
@@ -480,7 +487,7 @@ public class AnimDialogueManager : MonoBehaviour, IPointerClickHandler
                 string characterName = character.Split('_')[0];
                 if (characterDictionary.ContainsKey(characterName))
                 {
-                    tweenSequence.Join(characterDictionary[characterName].DOFade(0.0f, 1.0f).OnComplete(() => {
+                    tweenSequence.Join(characterDictionary[characterName].GetComponent<Image>().DOFade(0.0f, 1.0f).OnComplete(() => {
                         GameObject.Destroy(characterDictionary[characterName].gameObject);
                         characterDictionary.Remove(characterName);
                     }));
@@ -548,33 +555,34 @@ public class AnimDialogueManager : MonoBehaviour, IPointerClickHandler
         {
             foreach (string character in current.FadeInList)
             {
-                //find character image and start fade out tween
+                //find character image and start fade in tween
                 string[] characterArray = character.Split(' ');
-                Image currentCharacter;
+                //Image currentCharacter;
                 string characterName = characterArray[0].Split('_')[0];
+                string animName = characterArray[0].Split('_')[1];
                 if (characterDictionary.ContainsKey(characterName))
                 {
-                    currentCharacter = characterDictionary[characterName];
-                    tweenSequence.Join(Box.DOFade(Box.color.a, 0.5f).OnComplete(() => { currentCharacter.sprite = spriteDictionary[characterArray[0]]; }));
+                    tweenSequence.Join(Box.DOFade(Box.color.a, 0.5f).OnComplete(() => { characterDictionary[characterName].PlayAnimation(animName); }));
                 }
                 else
                 {
-                    currentCharacter = GameObject.Instantiate(SpritesPrefab, SpritesParent.transform).GetComponent<Image>();
-                    currentCharacter.color = new Color(1.0f, 1.0f, 1.0f, 0.0f);
+                    AnimatedSprite currentCharacter = GameObject.Instantiate(prefabDictionary[characterName], SpritesParent.transform).GetComponent<AnimatedSprite>();
+                    Image currentImage = currentCharacter.GetComponent<Image>();
+                    currentImage.color = new Color(1.0f, 1.0f, 1.0f, 0.0f);
                     if (characterArray.Length > 1)
                     {
-                        currentCharacter.rectTransform.anchoredPosition = new Vector2(GetSpritePosition(float.Parse(characterArray[1])), 0);
+                        currentImage.rectTransform.anchoredPosition = new Vector2(GetSpritePosition(float.Parse(characterArray[1])), 0);
                     }
-                    characterDictionary[characterName] = currentCharacter;
-                    tweenSequence.Join(currentCharacter.DOFade(1.0f, 1.0f));
-                    currentCharacter.sprite = spriteDictionary[characterArray[0]];
+                    characterDictionary[characterName] = currentCharacter.GetComponent<AnimatedSprite>();
+                    tweenSequence.Join(currentImage.DOFade(1.0f, 1.0f));
+                    currentCharacter.PlayAnimation(animName);
                 }
             }
         }
         AddSpecialActions();
         Tween nameTween = Box.DOFade(Box.color.a, 0.1f);
         nameTween.onComplete = () => {
-            if (NameText.text != current.Character && current.Character != "")
+            if (/*Remove after tech demo*/((current.Character != "LI" || NameText.text != "Big Cat") && NameText.text != current.Character) && current.Character != "")
             {
                 if (NameText.text == "")
                 {
@@ -590,6 +598,8 @@ public class AnimDialogueManager : MonoBehaviour, IPointerClickHandler
                         active = true;
                     };
                     NameText.text = current.Character;
+                    //TAKE OUT LATER!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                    NameText.text = current.Character == "LI" ? "Big Cat" : current.Character;
                     Canvas.ForceUpdateCanvases();
                     LayoutRebuilder.ForceRebuildLayoutImmediate(NamePlate.rectTransform);
                     Color plateColor;
@@ -616,6 +626,8 @@ public class AnimDialogueManager : MonoBehaviour, IPointerClickHandler
                             active = true;
                         };
                         NameText.text = current.Character;
+                        //TAKE OUT LATER!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                        NameText.text = current.Character == "LI" ? "Big Cat" : current.Character;
                         Canvas.ForceUpdateCanvases();
                         LayoutRebuilder.ForceRebuildLayoutImmediate(NamePlate.rectTransform);
                         Color plateColor;
@@ -647,6 +659,10 @@ public class AnimDialogueManager : MonoBehaviour, IPointerClickHandler
                 }
                 timer = 0;
                 active = true;
+            }
+            if (lines[currentLine].Character != "" && lines[currentLine].Character != "Player" && characterDictionary.ContainsKey(lines[currentLine].Character))
+            {
+                characterDictionary[lines[currentLine].Character].ToggleTalking(true);
             }
             Canvas.ForceUpdateCanvases();
         };
@@ -684,11 +700,11 @@ public class AnimDialogueManager : MonoBehaviour, IPointerClickHandler
                     switch (keyword)
                     {
                         case "Flip":
-                            tweenSequence.Append(characterDictionary[character].rectTransform.DOScaleX(characterDictionary[character].rectTransform.localScale.x * -1, 0.1f));
+                            tweenSequence.Append(characterDictionary[character].GetComponent<Image>().rectTransform.DOScaleX(characterDictionary[character].GetComponent<Image>().rectTransform.localScale.x * -1, 0.1f));
                             break;
                         case "Move":
                             float movePos = float.Parse(trimmedAction.Split(' ')[2]);
-                            tweenSequence.Append(characterDictionary[character].rectTransform.DOAnchorPosX(GetSpritePosition(movePos), 1.0f));
+                            tweenSequence.Append(characterDictionary[character].GetComponent<Image>().rectTransform.DOAnchorPosX(GetSpritePosition(movePos), 1.0f));
                             break;
                         default:
                             Debug.Log("Could not find correct special actions keyword at line " + currentLine + " in sheet " + DialogueFileName);
@@ -708,6 +724,10 @@ public class AnimDialogueManager : MonoBehaviour, IPointerClickHandler
                 if (currentLine + 1 < lines.Count)
                 {
                     //Next line
+                    if(lines[currentLine].Character != "" && lines[currentLine].Character != "Player" && characterDictionary.ContainsKey(lines[currentLine].Character))
+                    {
+                        characterDictionary[lines[currentLine].Character].ToggleTalking(false);
+                    }
                     ContinueDialogue();
                     moveOn = false;
                 }
@@ -718,6 +738,10 @@ public class AnimDialogueManager : MonoBehaviour, IPointerClickHandler
             }
             else
             {
+                if (lines[currentLine].Character != "" && lines[currentLine].Character != "Player" && characterDictionary.ContainsKey(lines[currentLine].Character))
+                {
+                    characterDictionary[lines[currentLine].Character].ToggleTalking(false);
+                }
                 //Skip animation.
                 tweenSequence?.Complete();
                 plateTween?.Complete();

@@ -9,7 +9,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 8464644468922415088, guid: 131e7a06070f0c542a063fef1867f01c, type: 3}
       propertyPath: m_Name
-      value: AnimatedCharacter
+      value: LI
       objectReference: {fileID: 0}
     - target: {fileID: 8464644468922415089, guid: 131e7a06070f0c542a063fef1867f01c, type: 3}
       propertyPath: m_LocalPosition.x
@@ -98,6 +98,6 @@ PrefabInstance:
     - target: {fileID: 8464644468922415103, guid: 131e7a06070f0c542a063fef1867f01c, type: 3}
       propertyPath: m_Controller
       value: 
-      objectReference: {fileID: 9100000, guid: deef978e761ac3a44823755a5387920c, type: 2}
+      objectReference: {fileID: 9100000, guid: d7b09a8af8d25c84aba3a28119b1cf30, type: 2}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 131e7a06070f0c542a063fef1867f01c, type: 3}
