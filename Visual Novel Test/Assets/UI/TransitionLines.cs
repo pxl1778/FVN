@@ -41,7 +41,7 @@ public class TransitionLines : MonoBehaviour
 
     public void OnHalfwayTransition()
     {
-        GameManager.instance.EventManager.TransitionLinesMidMovement.Invoke();
+        GameManager.instance.EventManager.TransitionMidMovement.Invoke();
     }
     public void EndTransition()
     {

@@ -5,7 +5,7 @@ using UnityEngine.Events;
 
 public class EventManager : MonoBehaviour
 {
-    public UnityEvent TransitionLinesMidMovement = new UnityEvent();
+    public UnityEvent TransitionMidMovement = new UnityEvent();
     public UnityEvent Pause = new UnityEvent();
     public UnityEvent Unpause = new UnityEvent();
 }

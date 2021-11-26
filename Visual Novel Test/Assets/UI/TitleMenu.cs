@@ -32,13 +32,13 @@ public class TitleMenu : MonoBehaviour
             RectTransform r = ClickParticles.GetComponent<RectTransform>();
             r.localPosition = newPos;
             r.localPosition += new Vector3(0, 0, -200);
-            ClickParticles.Play();
+            //ClickParticles.Play();
         }
     }
 
     public void TransitionTitleScreen()
     {
-        GameManager.instance.EventManager.TransitionLinesMidMovement.AddListener(ShowMainMenuAnim);
+        GameManager.instance.EventManager.TransitionMidMovement.AddListener(ShowMainMenuAnim);
         TransitionObject.StartTransition();
     }
 
@@ -54,12 +54,12 @@ public class TitleMenu : MonoBehaviour
 
     public void ShowMainMenuAnim()
     {
-        GameManager.instance.EventManager.TransitionLinesMidMovement.RemoveListener(ShowMainMenuAnim);
+        GameManager.instance.EventManager.TransitionMidMovement.RemoveListener(ShowMainMenuAnim);
         TitleObject.SetActive(false);
         SelectSceneObject.SetActive(false);
         SaveMenuObject.SetActive(false);
         MainObject.SetActive(true);
-        TransitionObject.EndTransition();
+        //TransitionObject.EndTransition();
     }
 
     public void ShowMainMenu()
